@@ -15,7 +15,7 @@ UDP_PORT_NO = 64039
 Message = "0"
 
 class poseDetector():
-    def __init__(self, mode= False, complexity = 0, smooth = True, detectionConfidence = 0.2, trackingConfidence = 0.9):
+    def __init__(self, mode= False, complexity = 0, smooth = True, detectionConfidence = 0.7, trackingConfidence = 0.4):
         self.mode = mode
         self.complexity = complexity
         self.smooth = smooth

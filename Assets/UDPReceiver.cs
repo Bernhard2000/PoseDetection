@@ -44,51 +44,77 @@ public class UDPReceiver : MonoBehaviour
         UdpClient udpClient = new UdpClient(port);
         Debug.Log("Create UDPClient");
         IPEndPoint ip = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
-        float[] xValMean =  new float[3] {0,0,0,};
-        float[] yValMean =  new float[3] {0,0,0,};
-        float[] zValMean =  new float[3] {0,0,0,};
 
+        float[][] xVals =  new float[31][];
+        float[][] yVals =  new float[31][];
+        float[][] zVals =  new float[31][];
+
+        for(int i = 0; i < 31; i++)
+        {
+            xVals[i] = new float[5];
+            yVals[i] = new float[5];
+            zVals[i] = new float[5];
+        }
 
         while(true) 
         {
-            for(int i = 0; i < 3; i++)
-            {
+            int[] updated = new int[33];
                 try 
                 {
                     byte [] rawData = udpClient.Receive(ref ip);
                     string text = Encoding.UTF8.GetString(rawData);
                     Debug.Log("Received data string: "+ text);
                     string[] splitStringTemp = text.Split(';');
-                    int[] updated = new int[33];
 
                     foreach (var bodypart in splitStringTemp)
                     {
                         string[] valueSplit = bodypart.Split(',');
                         try
                         {
-                            int bodypartIndex = Int32.Parse(valueSplit[0]);
-                        
-                            xValMean[i] = float.Parse(valueSplit[1], CultureInfo.InvariantCulture);
-                            yValMean[i] = -float.Parse(valueSplit[2], CultureInfo.InvariantCulture);
-                            zValMean[i] = float.Parse(valueSplit[3], CultureInfo.InvariantCulture);
+                            int nodeIndex = Int32.Parse(valueSplit[0]);
 
-                            if (!bodyPartDict.ContainsKey(bodypartIndex))
+                            xVals[nodeIndex][4] = xVals[nodeIndex][3];
+                            xVals[nodeIndex][3] = xVals[nodeIndex][2];
+                            xVals[nodeIndex][2] = xVals[nodeIndex][1];
+                            xVals[nodeIndex][1] = xVals[nodeIndex][0];
+                        
+                            xVals[nodeIndex][0] = float.Parse(valueSplit[1], CultureInfo.InvariantCulture);
+                            yVals[nodeIndex][0] = -float.Parse(valueSplit[2], CultureInfo.InvariantCulture);
+                            zVals[nodeIndex][0] = float.Parse(valueSplit[3], CultureInfo.InvariantCulture);
+
+                            //glätten mit vorherigen Werten
+                            float xValMean = (xVals[nodeIndex][0] * 50 + xVals[nodeIndex][1] * 25 + xVals[nodeIndex][2] * 13 + xVals[nodeIndex][3] * 8 +  xVals[nodeIndex][4] * 4) / 100;
+                            float yValMean = (yVals[nodeIndex][0] * 50 + yVals[nodeIndex][1] * 25 + yVals[nodeIndex][2] * 13 + yVals[nodeIndex][3] * 8 +  yVals[nodeIndex][4] * 4) / 100;
+                            float zValMean = (zVals[nodeIndex][0] * 50 + zVals[nodeIndex][1] * 25 + zVals[nodeIndex][2] * 13 + zVals[nodeIndex][3] * 8 +  zVals[nodeIndex][4] * 4) / 100;
+
+
+                            if (!bodyPartDict.ContainsKey(nodeIndex))
                             {
-                                bodyPartDict.Add(bodypartIndex, new float[] {xValMean.Average(), yValMean.Average(), zValMean.Average()});
+                                bodyPartDict.Add(nodeIndex, new float[] {xValMean, yValMean, zValMean});
                             }
                             else
                             {
-                                bodyPartDict[bodypartIndex] = new float[] {xValMean.Average(), yValMean.Average(), zValMean.Average()};
+                                bodyPartDict[nodeIndex] = new float[] {xValMean, yValMean, zValMean};
                             }
-                            updated[bodypartIndex] = 5;
+                            updated[nodeIndex] = 5;
                         }
                         catch (Exception e)
                         {
-                            Debug.Log(e.Message);
+                            Debug.Log(e.Message + "\n" + "Stracktrace: " + e.StackTrace);
                         }                
                     }
 
-                    for(int j = 0; j < 33; j++)
+                   
+                    
+
+                    Debug.Log("Updated bodypartdict");
+                } catch (Exception ex)
+                {
+                    Debug.Log(ex.Message);
+                }
+            
+
+             for(int j = 0; j < 33; j++)
                     {
                         if(updated[j] == 0)
                         {
@@ -97,14 +123,6 @@ public class UDPReceiver : MonoBehaviour
                         updated[j]--;
                     }
 
-                    
-
-                    Debug.Log("Updated bodypartdict");
-                } catch (Exception ex)
-                {
-                    Debug.Log(ex.Message);
-                }
-            }
         }
     }
 }

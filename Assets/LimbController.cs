@@ -8,6 +8,7 @@ public class LimbController : MonoBehaviour
 {
     GameObject [] limbs = new GameObject[33];
     Dictionary<int, Dictionary<int, GameObject>> connectors = new Dictionary<int, Dictionary<int,GameObject>>();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -29,14 +30,16 @@ public class LimbController : MonoBehaviour
                     if(limbs[i] == null)
                     {
                         limbs[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        limbs[i].transform.localScale = new Vector3(2,2,2);
                     }
-                    limbs[i].SetActive(true);
+                    
+
                     float xpos = (UDPReceiver.bodyPartDict[i][0]) * 40;
                     float ypos = (UDPReceiver.bodyPartDict[i][1]) * 40;
                     float zpos = (UDPReceiver.bodyPartDict[i][2]) * 40;
 
-                    limbs[i].transform.position = new Vector3(xpos , ypos, zpos);
-                    Debug.Log(i+ ":" + xpos + "," + ypos + "," + zpos);
+                    limbs[i].transform.position = new Vector3(xpos, ypos, zpos);
+                    Debug.Log("Setting node: " + i + ":" + xpos + "," + ypos + "," + zpos);
                 } else
                 {
                     GameObject.Destroy(limbs[i]);
